@@ -43,7 +43,7 @@ def tokenize_description(text):
     return re.findall(r'\b[a-zA-Z]{2,}\b', text.lower())
 
 def tokenize_filter_code(code):
-    return re.findall(r'\w+|==|!=|<=|>=|[^\s\w]', code.lower())
+    return re.findall(r'\w+|==|!=|<=|>=|[^\s\w]', code, re.UNICODE)
 
 
 rows = []
@@ -60,7 +60,6 @@ for file in files:
             code_labels = [label_token(tok) for tok in code_tokens]
             rows.append({
                 "id": i,
-                "description": desc,
                 "desc_tokens": desc_tokens,
                 "filter_code": code,
                 "code_tokens": code_tokens,
