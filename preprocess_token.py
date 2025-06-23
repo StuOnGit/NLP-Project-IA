@@ -1,49 +1,73 @@
-import pandas as pd
-from pathlib import Path   
 import re
+import pandas as pd
 
-# Percorso al file CSV
-csv_file_raw = "data/Step1_Raw_Data_with_FilterCode1.csv"
-csv_file_populare = "data/Step2_Popular_Rules_with_FilterCode.csv"
-csv_file_iot = "data/Step3_IoT_Rules_with_FilterCode.csv"
-output_file = "output_token_count.txt"
 
-# Lista dei file CSV
 files = [
-    csv_file_raw,
-    csv_file_populare,
-    csv_file_iot
+    "data/Step1_Raw_Data_with_FilterCode1.csv",
+    "data/Step2_Popular_Rules_with_FilterCode.csv",
+    "data/Step3_IoT_Rules_with_FilterCode.csv"
 ]
+LABELS = {
+    'if': 'IF',
+    'else': 'ELSE',
+    'for': 'FOR',
+    'while': 'WHILE',
+    '=': 'ASSIGN',
+    '==': 'COND',
+    '!=': 'COND',
+    '<=': 'COND',
+    '>=': 'COND',
+    '<': 'COND',
+    '>': 'COND',
+    '(': 'LPAREN',
+    ')': 'RPAREN',
+    '{': 'LBRACE',
+    '}': 'RBRACE',
+    ';': 'END',
+    '.': 'DOT',
+    # Puoi aggiungere altre regole...
+}
+def label_token(token):
+    if token in LABELS:
+        return LABELS[token]
+    elif token.isdigit():
+        return 'NUM'
+    elif re.match(r'^[A-Z][a-zA-Z0-9_]*$', token):
+        return 'OBJ'  # Oggetto o classe
+    elif re.match(r'^[a-z_][a-zA-Z0-9_]*$', token):
+        return 'VAR'  # Variabile o funzione
+    else:
+        return 'UNK'
 
-token_tables = []
-labels = []
+def tokenize_description(text):
+    return re.findall(r'\b[a-zA-Z]{2,}\b', text.lower())
+
+def tokenize_filter_code(code):
+    return re.findall(r'\w+|==|!=|<=|>=|[^\s\w]', code.lower())
+
+
+rows = []
 
 for file in files:
-    try:
-        df = pd.read_csv(file)
-        if 'description' not in df.columns:
-            print(f"⚠️ Colonna 'description' non trovata in {file}.")
-            continue
-         # Unisci tutte le descrizioni in un unico testo
-        all_text = " ".join(df['description'].dropna().astype(str)).lower()
-        # Tokenizza: solo parole di almeno 2 lettere
-        tokens = re.findall(r'\b[a-z]{2,}\b', all_text)
-        # Conta le occorrenze
-        counts = pd.Series(tokens).value_counts()
-        print(f"File: {file} - Numero token: {len(tokens)} - Token unici: {len(counts)}")
-        token_tables.append(counts.rename(Path(file).name).to_frame())
-        labels.append(Path(file).name)
-    except Exception as e:
-        print(f"⚠️ Errore nella lettura del file {file}: {e}")
-    
+    df = pd.read_csv(file)
+    if 'description' in df.columns and 'filter_code' in df.columns:
+        i = 0
+        for _, row in df.iterrows():
+            desc = str(row['description']) if pd.notna(row['description']) else ""
+            code = str(row['filter_code']) if pd.notna(row['filter_code']) else ""
+            desc_tokens = tokenize_description(desc)
+            code_tokens = tokenize_filter_code(code)
+            code_labels = [label_token(tok) for tok in code_tokens]
+            rows.append({
+                "id": i,
+                "description": desc,
+                "desc_tokens": desc_tokens,
+                "filter_code": code,
+                "code_tokens": code_tokens,
+                "code_labels": code_labels
+            })
+            i += 1
 
-# Unione delle tabelle
-df_merged = pd.concat(token_tables, axis=1).fillna(0).astype(int)
-df_merged["totale"] = df_merged.sum(axis=1)
-df_merged = df_merged.sort_values("totale", ascending=False)
-df_merged.index.name = "token"
-df_merged = df_merged.reset_index()
-
-# Salva il risultato
-df_merged.to_csv("token_summary.csv", index=False)
-print("✅ File salvato: token_summary.csv")
+df_out = pd.DataFrame(rows)
+df_out.to_csv("tokenized_labeled.csv", index=False)
+print("✅ File salvato: tokenized_labeled.csv")
