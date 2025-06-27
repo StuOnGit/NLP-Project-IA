@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IFTTT Search</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    input, button { width: 100%; padding: 10px; margin-top: 10px; }
+    pre { background: #f4f4f4; padding: 10px; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Cerca funzione in un servizio IFTTT</h1>
+  <input type="text" id="channel" placeholder="Channel (es. facebook, twitter)">
+  <input type="text" id="function" placeholder="Function (es. any new post)">
+  <button onclick="search()">Cerca</button>
+
+  <h3>🔎 Risultato:</h3>
+  <pre id="result"></pre>
+
+  <script>
+    async function search() {
+      const data = {
+        channel: document.getElementById("channel").value,
+        function: document.getElementById("function").value
+      };
+
+      document.getElementById("result").innerText = "Cercando...";
+
+      const res = await fetch("/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const json = await res.json();
+      const { matches, all_available } = json;
+
+      let output = "";
+
+      output += `✅ Match trigger:\n${matches.trigger?.join("\n") || "Nessuno"}\n\n`;
+      output += `✅ Match action:\n${matches.action?.join("\n") || "Nessuno"}\n\n`;
+      output += `📋 Tutti i trigger:\n${all_available.triggers.join("\n")}\n\n`;
+      output += `📋 Tutte le action:\n${all_available.actions.join("\n")}`;
+
+      document.getElementById("result").innerText = output;
+    }
+  </script>
+</body>
+</html>
