@@ -4,7 +4,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 import time
-import pyperclip
 
 
 def start_browser():
@@ -59,9 +58,9 @@ def get_triggers_actions_queries(service_url):
 
 
 
-def extract_trigger_details(url):
+def extract_detail_data(url):
     driver = start_browser()
-    driver.get(trigger_url)
+    driver.get(url)
     time.sleep(3)
 
     data = []
@@ -104,11 +103,19 @@ def extract_trigger_details(url):
                 continue
     finally:
         driver.quit()
-
     return data
 
    
-
+def format_and_copy(details):
+    lines = []
+    for i, entry in enumerate(details, 1):
+        lines.append(f"Elemento {i}:")
+        for key in sorted(entry.keys()):
+            lines.append(f"  {key}: {entry[key]}")
+        lines.append("")  # Riga vuota tra elementi
+    formatted = "\n".join(lines)
+    print("Dettagli estratti e copiati negli appunti:\n")
+    print(formatted)
 
 # === MAIN ===
 if __name__ == "__main__":
@@ -145,28 +152,35 @@ if __name__ == "__main__":
         _, selected_url = matching_services[int(selected)]
         print(f"\nCarico: {selected_url}")
 
-        ta = get_triggers_actions(selected_url)
+        ta = get_triggers_actions_queries(selected_url)
 
+        all_links = []
+        i = 0
         print("\nTrigger:")
         for idx, t in enumerate(ta["triggers"]):
-            print(f" [{idx}]  {t}")
+            print(f" [{i}]  [{idx}]{t}")
+            all_links.append(t)
+            i += 1
 
-        print("\n⚡ Actions:")
+        print("\nActions:")
         for idx,a in enumerate(ta["actions"]):
-            print(f" [{idx}] {a}")
+            print(f" [{i}] [{idx}]{a}")
+            all_links.append(a)
+            i += 1
 
-        for idx, t in enumerate(ta["triggers"]):
-            choice = input("\n👉 Vuoi aprire un trigger? Inserisci numero (o invio per saltare): ").strip()
-            if choice.isdigit():
-                index = int(choice)
-                if 0 <= index < len(ta["triggers"]):
-                    trigger_url = ta["triggers"][index]
-                    data = extract_trigger_details(trigger_url)
-                    for item in data:
-                        print(f"\nSezione: {item['section']}")
-                        print(f" Titolo: {item['title']}")
-                        print(f" Descrizione: {item['description']}")
-                        print(" Dettagli:")
-                        for key, value in item['details'].items():
-                            print(f"  - {key}: {value}")
+        print("\nQueries:")
+        for idx,q in enumerate(ta["queries"]):
+            print(f" [{i}] [{idx}]{q}")
+            all_links.append(q)
+            i += 1
+
+        sel = int(input("\nInserisci l'indice del link da aprire (o invio per saltare): ").strip())
+        if sel >= 0 or sel <= len(all_links):
+            detail_url = all_links[sel]
+            print(f"Estrazione dettagli da: {detail_url}")
+            details = extract_detail_data(detail_url)
+            format_and_copy(details)
+        else:
+            print("Indice non valido, salto...")
+        
 
