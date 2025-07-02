@@ -65,8 +65,7 @@ def extract_detail_data(url):
     time.sleep(3)
 
     data = []
-    api_slug = ""
-    dev_info = []
+    developer_info = {}
     
     try:
         sections = driver.find_elements(By.TAG_NAME, "section")
@@ -75,21 +74,17 @@ def extract_detail_data(url):
                 h3_elements = section.find_elements(By.TAG_NAME, "h3")
                 section_title = h3_elements[0].text.strip() if h3_elements else ""
 
-                # Cerca la sezione Developer info
-                h4_elements = section.find_elements(By.TAG_NAME, "h4")
-                for h4 in h4_elements:
-                    if h4.text.strip() == API_TITLE:
-                        # Cerca tutti i <dl> nella section
-                        dl_elements = section.find_elements(By.TAG_NAME, "dl")
-                        for dl in dl_elements:
-                            dt_elements = dl.find_elements(By.TAG_NAME, "dt")
-                            dd_elements = dl.find_elements(By.TAG_NAME, "dd")
-                            for dt, dd in zip(dt_elements, dd_elements):
-                                if dt.text.strip() == "API endpoint slug":
-                                    api_slug = dd.text.strip()
-                                else:
-                                    dev_info.append(dd.text.strip())
-
+                # Estrai developer_info UNA SOLA VOLTA
+                if not developer_info:
+                    h4_elements = section.find_elements(By.TAG_NAME, "h4")
+                    for h4 in h4_elements:
+                        if h4.text.strip() == API_TITLE:
+                            dl_elements = section.find_elements(By.TAG_NAME, "dl")
+                            for dl in dl_elements:
+                                dt_elements = dl.find_elements(By.TAG_NAME, "dt")
+                                dd_elements = dl.find_elements(By.TAG_NAME, "dd")
+                                for dt, dd in zip(dt_elements, dd_elements):
+                                    developer_info[dt.text.strip()] = dd.text.strip()
 
                 divs = section.find_elements(By.TAG_NAME, "div")
                 for div in divs:
@@ -101,7 +96,6 @@ def extract_detail_data(url):
                         except:
                             description = ""
 
-                        # Estrai dettagli da <dl> nel div
                         details = {}
                         dl_elements = div.find_elements(By.TAG_NAME, "dl")
                         for dl in dl_elements:
@@ -110,10 +104,7 @@ def extract_detail_data(url):
                             for dt, dd in zip(dt_elements, dd_elements):
                                 details[dt.text.strip()] = dd.text.strip()
 
-
                         data.append({
-                            "api_slug": api_slug,
-                            "developer_info": dev_info,
                             "section": section_title,
                             "title": title,
                             "description": description,
@@ -125,11 +116,16 @@ def extract_detail_data(url):
                 continue
     finally:
         driver.quit()
-    return data
+    return developer_info, data
 
    
-def format_and_copy(details):
+def format_and_copy(dev_info, details):
     lines = []
+    lines.append("Developer info:")
+    for k, v in dev_info.items():
+        lines.append(f"  {k}: {v}")
+    lines.append("")  # Riga vuota
+
     for i, entry in enumerate(details, 1):
         lines.append(f"Elemento {i}:")
         for key in sorted(entry.keys()):
@@ -203,7 +199,7 @@ def get_info_service():
             detail_url = all_links[sel]
             print(f"Estrazione dettagli da: {detail_url}")
             details = extract_detail_data(detail_url)
-            return format_and_copy(details)
+            return format_and_copy(*details)
            
         else:
             print("Indice non valido, salto...")
