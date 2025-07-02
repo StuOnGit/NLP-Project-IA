@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
+API_TITLE = "Developer info"
 
 def start_browser():
     options = Options()
@@ -64,34 +65,55 @@ def extract_detail_data(url):
     time.sleep(3)
 
     data = []
-
+    api_slug = ""
+    dev_info = []
+    
     try:
         sections = driver.find_elements(By.TAG_NAME, "section")
         for section in sections:
             try:
-                # Prova a prendere l'h3, se non c'è, usa stringa vuota
                 h3_elements = section.find_elements(By.TAG_NAME, "h3")
                 section_title = h3_elements[0].text.strip() if h3_elements else ""
+
+                # Cerca la sezione Developer info
+                h4_elements = section.find_elements(By.TAG_NAME, "h4")
+                for h4 in h4_elements:
+                    if h4.text.strip() == API_TITLE:
+                        # Cerca tutti i <dl> nella section
+                        dl_elements = section.find_elements(By.TAG_NAME, "dl")
+                        for dl in dl_elements:
+                            dt_elements = dl.find_elements(By.TAG_NAME, "dt")
+                            dd_elements = dl.find_elements(By.TAG_NAME, "dd")
+                            for dt, dd in zip(dt_elements, dd_elements):
+                                if dt.text.strip() == "API endpoint slug":
+                                    api_slug = dd.text.strip()
+                                else:
+                                    dev_info.append(dd.text.strip())
+
 
                 divs = section.find_elements(By.TAG_NAME, "div")
                 for div in divs:
                     try:
-                        title_element = div.find_element(By.TAG_NAME, "h4")
+                        title_element = div.find_element(By.TAG_NAME, "h4") or ""
                         title = title_element.text.strip()
-                        # Optional: descrizione se presente
                         try:
                             description = div.find_element(By.CLASS_NAME, "type-definition").text.strip()
                         except:
                             description = ""
 
-                        # Cerca elementi <dl> se presenti
-                        dl = div.find_element(By.TAG_NAME, "dl")
-                        dt_elements = dl.find_elements(By.TAG_NAME, "dt")
-                        dd_elements = dl.find_elements(By.TAG_NAME, "dd")
+                        # Estrai dettagli da <dl> nel div
+                        details = {}
+                        dl_elements = div.find_elements(By.TAG_NAME, "dl")
+                        for dl in dl_elements:
+                            dt_elements = dl.find_elements(By.TAG_NAME, "dt")
+                            dd_elements = dl.find_elements(By.TAG_NAME, "dd")
+                            for dt, dd in zip(dt_elements, dd_elements):
+                                details[dt.text.strip()] = dd.text.strip()
 
-                        details = {dt.text.strip(): dd.text.strip() for dt, dd in zip(dt_elements, dd_elements)}
 
                         data.append({
+                            "api_slug": api_slug,
+                            "developer_info": dev_info,
                             "section": section_title,
                             "title": title,
                             "description": description,
@@ -116,9 +138,11 @@ def format_and_copy(details):
     formatted = "\n".join(lines)
     print("Dettagli estratti e copiati negli appunti:\n")
     print(formatted)
+    return formatted
 
 # === MAIN ===
-if __name__ == "__main__":
+def get_info_service():
+    """Funzione principale per estrarre e visualizzare i servizi IFTTT"""
     print("Estrazione automatica dei servizi IFTTT...")
     services = extract_all_services()
     print(f"Servizi:")
@@ -179,8 +203,14 @@ if __name__ == "__main__":
             detail_url = all_links[sel]
             print(f"Estrazione dettagli da: {detail_url}")
             details = extract_detail_data(detail_url)
-            format_and_copy(details)
+            return format_and_copy(details)
+           
         else:
             print("Indice non valido, salto...")
         
 
+if __name__ == "__main__":
+    try:
+        get_info_service()
+    except Exception as e:
+        print(f"Errore durante l'esecuzione: {e}")
