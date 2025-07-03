@@ -1,0 +1,57 @@
+[
+  {
+    "original_description": "Choose your warning temperature. When temp rises above that, IFTT will send a message warning you.",
+    "trigger_channel": "",
+    "trigger_slug": "chatgpt.prompt",
+    "trigger_fields": [
+      {
+        "section": "Query fields",
+        "title": "Prompt\nText input > Long text",
+        "description": "Text input > Long text",
+        "details": {
+          "Label": "Prompt",
+          "Slug": "prompt",
+          "Required": "true",
+          "Can have default value": "true"
+        }
+      },
+      {
+        "section": "Query fields",
+        "title": "Language\nText input > Other",
+        "description": "Text input > Other",
+        "details": {
+          "Label": "Language",
+          "Helper text": "Specify a language for the generated text. Defaults to English.",
+          "Slug": "language",
+          "Required": "false",
+          "Can have default value": "true"
+        }
+      },
+      {
+        "section": "Ingredients",
+        "title": "Response\nThe response to the prompt.",
+        "description": "The response to the prompt.",
+        "details": {
+          "Slug": "response",
+          "Filter code": "Chatgpt.prompt.Response",
+          "Type": "String",
+          "Example": "Who's there?"
+        }
+      }
+    ],
+    "action_channel": "",
+    "action_slug": null,
+    "action_fields": [],
+    "filter_code": ""
+  },
+  {
+    "original_description": "Post Instagram photo as facebook statuses.",
+    "trigger_channel": "",
+    "trigger_slug": null,
+    "trigger_fields": [],
+    "action_channel": "",
+    "action_slug": null,
+    "action_fields": [],
+    "filter_code": ""
+  }
+]

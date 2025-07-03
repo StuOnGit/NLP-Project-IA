@@ -199,7 +199,12 @@ def get_info_service():
             detail_url = all_links[sel]
             print(f"Estrazione dettagli da: {detail_url}")
             details = extract_detail_data(detail_url)
-            return format_and_copy(*details)
+            format_and_copy(*details)
+
+            print("\n\nDettagli estratti:")
+            print(details)
+            
+            return details
            
         else:
             print("Indice non valido, salto...")

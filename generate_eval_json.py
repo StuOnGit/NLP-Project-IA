@@ -12,9 +12,6 @@ def generate_filter_code(input, data):
     if not data or not input:
         raise ValueError("No data or input provided.")
     
-
-
-    
     # parse data to extract information for the prompt
 
 
