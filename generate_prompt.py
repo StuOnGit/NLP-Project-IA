@@ -55,20 +55,29 @@ def main():
     for idx, row in df.iterrows():
         print(f"\n[{idx+1}/{SAMPLES}] Regola: {clean_string(row.get('description', ''))[:60]}...")
 
-        # Pulisco i campi dal csv
-        trigger_channel = clean_string(row.get("trigger_channel") or "")
-        action_channel = clean_string(row.get("action_channel") or "")
         filter_code = clean_string(row.get("filter_code") or "")
         original_description = clean_string(row.get("description") or "")
 
+        # --- TRIGGER ---
         print("\n--- TRIGGER ---")
-        trigger_output = get_info_service()  # senza parametri
-        trigger_slug, trigger_fields = parse_crawler_output(trigger_output)
+        trigger_output = get_info_service()  # L'utente seleziona il servizio trigger
+        if not trigger_output:
+            print("Nessun output dal crawler per il trigger.")
+            continue
+        trigger_channel = trigger_output.get("service_name", "")
+        trigger_slug, trigger_fields = parse_crawler_output((trigger_output.get("developer_info", {}), trigger_output.get("details", [])))
+        print(f"Trigger channel: {trigger_channel}")
         print(f"Trigger slug: {trigger_slug}")
 
+        # --- ACTION ---
         print("\n--- ACTION ---")
-        action_output = get_info_service()  # senza parametri
-        action_slug, action_fields = parse_crawler_output(action_output)
+        action_output = get_info_service()  # L'utente seleziona il servizio action
+        if not action_output:
+            print("Nessun output dal crawler per l'action.")
+            continue
+        action_channel = action_output.get("service_name", "")
+        action_slug, action_fields = parse_crawler_output((action_output.get("developer_info", {}), action_output.get("details", [])))
+        print(f"Action channel: {action_channel}")
         print(f"Action slug: {action_slug}")
 
         entry = {

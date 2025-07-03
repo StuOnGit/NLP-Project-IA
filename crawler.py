@@ -27,10 +27,10 @@ def extract_all_services():
     services = []
 
     for card in service_cards:
-        name = card.get_attribute("aria-label") or card.text.strip()
+        channel = card.get_attribute("aria-label") or card.text.strip()
         link = card.get_attribute("href")
-        if name and link:
-            services.append((name, link))
+        if channel and link:
+            services.append((channel, link))
 
     driver.quit()
     return services
@@ -119,9 +119,14 @@ def extract_detail_data(url):
     return developer_info, data
 
    
-def format_and_copy(dev_info, details):
+def format_and_copy(dev_info, details, selected_channel):
+    
+    
     lines = []
+    lines.append(f"Servizio: {selected_channel}")
+    lines.append("")
     lines.append("Developer info:")
+
     for k, v in dev_info.items():
         lines.append(f"  {k}: {v}")
     lines.append("")  # Riga vuota
@@ -142,8 +147,8 @@ def get_info_service():
     print("Estrazione automatica dei servizi IFTTT...")
     services = extract_all_services()
     print(f"Servizi:")
-    for name, link in services:
-        print(f" - {name}: {link}")  
+    for channel, link in services:
+        print(f" - {channel}: {link}")  
     print(f"Servizi trovati: {len(services)}")
 
     while True:
@@ -152,7 +157,7 @@ def get_info_service():
             break
 
         # Trova servizi che contengono il testo cercato
-        matching_services = [(name, link) for name, link in services if user_input in name.lower()]
+        matching_services = [(channel, link) for channel, link in services if user_input in channel.lower()]
 
         if not matching_services:
             print(" Nessun servizio trovato.")
@@ -160,8 +165,8 @@ def get_info_service():
 
         # Stampa i match trovati
         print(f"\nServizi trovati per '{user_input}':")
-        for idx, (name, link) in enumerate(matching_services):
-            print(f" [{idx}] {name} -> {link}")
+        for idx, (channel, link) in enumerate(matching_services):
+            print(f" [{idx}] {channel} -> {link}")
 
         # Lascia scegliere un servizio da cui estrarre trigger/action
         selected = input("\n Inserisci l'indice del servizio da aprire (o invio per saltare): ").strip()
@@ -170,6 +175,7 @@ def get_info_service():
             continue
 
         _, selected_url = matching_services[int(selected)]
+        selected_channel = matching_services[int(selected)][0]  # Prendi il nome del servizio
         print(f"\nCarico: {selected_url}")
 
         ta = get_triggers_actions_queries(selected_url)
@@ -198,13 +204,17 @@ def get_info_service():
         if sel >= 0 or sel <= len(all_links):
             detail_url = all_links[sel]
             print(f"Estrazione dettagli da: {detail_url}")
-            details = extract_detail_data(detail_url)
-            format_and_copy(*details)
+            developer_info, details = extract_detail_data(detail_url)
+            format_and_copy(developer_info, details, selected_channel)
 
             print("\n\nDettagli estratti:")
-            print(details)
-            
-            return details
+            output = {
+                "service_name": selected_channel,
+                "developer_info": developer_info,
+                "details": details
+            }
+            print(output)
+            return output
            
         else:
             print("Indice non valido, salto...")
