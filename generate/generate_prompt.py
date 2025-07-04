@@ -3,7 +3,7 @@ import json
 import os
 import random
 import re
-from crawler import get_info_service
+from crawler.crawler import get_info_service
 
 DATASET_PATH = "Step1_Raw_Data_with_FilterCode1.csv"
 OUTPUT_PATH = "data/generated_prompt_data.json"

@@ -2,9 +2,8 @@ import json
 import os
 import random
 import time
-import ollama
 from tqdm import tqdm
-import crawler
+import crawler.crawler as crawler
 
 
 def generate_filter_code(input, data):
