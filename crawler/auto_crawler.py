@@ -219,7 +219,7 @@ def extract_core_path(path):
     # Prende solo la parte dopo l'ultimo slash
     return path.strip("/").split("/")[-1].lower()
 
-def check_trigger_action(row, num_row, services, type="trigger"):
+def check_trigger_action(row, num_row, services, type="trigger" or "action"):
     output = None
     try:
         idx = 0 if type == "trigger" else 1
