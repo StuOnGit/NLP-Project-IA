@@ -1,8 +1,11 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 import time
 import os
 import ast
@@ -11,16 +14,20 @@ import pandas as pd
 import re
 from difflib import SequenceMatcher
 
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 API_TITLE = "Developer info"
-FILE_CSV = "Step1_Raw_Data_with_FilterCode1.csv"
-OUTPUT_PATH = "data/generated_prompt_data.json"
+FILE_CSV = f"{base_dir}/data/Step1_Raw_Data_with_FilterCode1.csv"
+OUTPUT_PATH = f"{base_dir}/data/generated_prompt_data_cais.json"
+
 def start_browser():
     options = Options()
     options.add_argument("--headless=new")
     options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    return webdriver.Firefox(service=Service(GeckoDriverManager().install()), options=options)
+    # return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 
 def extract_all_services():
@@ -144,14 +151,14 @@ def format_and_copy(dev_info, details, selected_channel):
             lines.append(f"  {key}: {entry[key]}")
         lines.append("")  # Riga vuota tra elementi
     formatted = "\n".join(lines)
-    print("Dettagli estratti e copiati negli appunti:\n")
-    print(formatted)
+    # print("Dettagli estratti e copiati negli appunti:\n")
+    # print(formatted)
     return formatted
 
 # === MAIN ===
-def get_info_service(samples=1000,file_csv=FILE_CSV):
+def get_info_service(start_idx=1000, file_csv=FILE_CSV):
     correct = 0
-    """Funzione principale per estrarre e visualizzare i servizi IFTTT"""
+    prompt_data = []
     print("Estrazione automatica dei servizi IFTTT...")
     services = extract_all_services()
     print(f"Servizi:")
@@ -159,37 +166,33 @@ def get_info_service(samples=1000,file_csv=FILE_CSV):
         print(f" - {channel}: {link}")  
     print(f"Servizi trovati: {len(services)}")
 
-    prompt_data = []
+    if not os.path.exists(file_csv):
+        print(f"File CSV non trovato: {file_csv}")
+        return 0, []
 
-    for iteration in range( samples ):
+    df = pd.read_csv(file_csv)
+    total_rows = len(df)
+    print(f"Totale righe nel CSV: {total_rows}")
 
-        # prende la riga all'indice i del file csv e controlla se il secondo campo è true o false
-        if os.path.exists(file_csv):
-            df = pd.read_csv(file_csv)
-            if iteration >= len(df):
-                print(f"Indice {iteration} fuori dai limiti del file CSV, salto...")
-                continue
-            row = df.iloc[iteration]
-            if not row.get("by_service_owner", False) or str(row.get("by_service_owner", "")).lower() not in ["true", "1"]:
-                print(f"Riga {iteration} non valida, salto...")
-                continue
-
-        print(f"\n--- Iterazione {iteration}/{samples} ---")
-
-        # se ritorna none la funzione skippa il for
-        trigger = check_trigger_action(row, iteration, services, type="trigger")
-        if  trigger == None:
-            print(f"Riga {iteration} non valida, salto...")
+    for idx in range(start_idx, total_rows):
+        row = df.iloc[idx]
+        if not row.get("by_service_owner", False) or str(row.get("by_service_owner", "")).lower() not in ["true", "1"]:
+            print(f"Riga {idx} non valida, salto...")
             continue
-        action = check_trigger_action(row, iteration, services, type="action")
-        if  action == None:
-            print(f"Riga {iteration} non valida, salto...")
+
+        print(f"\n--- Iterazione {idx}/{total_rows} ---")
+
+        trigger = check_trigger_action(row, idx, services, type="trigger")
+        if trigger is None:
+            print(f"Riga {idx} non valida, salto...")
             continue
-        
+        action = check_trigger_action(row, idx, services, type="action")
+        if action is None:
+            print(f"Riga {idx} non valida, salto...")
+            continue
 
-
-        print(trigger)
-        print(action)
+        # print(trigger)
+        # print(action)
         
         entry = {
             "original_description": row.get("description", ""),
@@ -205,11 +208,11 @@ def get_info_service(samples=1000,file_csv=FILE_CSV):
         }
         prompt_data.append(entry)
         correct += 1
-        
-        
+        with open(OUTPUT_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
-    return correct, prompt_data
-            
+    return correct,prompt_data
+           
 def similar(a, b, threshold=0.7):
     """Restituisce True se le due stringhe sono simili oltre la soglia."""
     return SequenceMatcher(None, a, b).ratio() >= threshold
@@ -272,7 +275,7 @@ def check_trigger_action(row, num_row, services, type="trigger" or "action"):
                     "developer_info": developer_info,
                     "details": details
                     }
-                print(output)
+                # print(output)
                 
                 found = True
                 break
@@ -291,14 +294,13 @@ def check_trigger_action(row, num_row, services, type="trigger" or "action"):
 
 if __name__ == "__main__":
     try:
+        os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+    except Exception as e:
+        print(f"Errore durante la creazione della cartella: {e}")    
+        
+    try:
         correct, prompt_data = get_info_service(1000)
         if correct is not None:
             print(f"Correct number of rows are : {correct}")
-            # salvalo su output.txt
-            with open("output.txt", "w") as f:
-                f.write(str(correct))
-            os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
-            with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-                json.dump(prompt_data, f, indent=2, ensure_ascii=False)
     except Exception as e:
-        print(f"Errore durante l'esecuzione: {e}")
+        print(f"Errore durante l'esecuzione: {e}")

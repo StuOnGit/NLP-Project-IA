@@ -1,0 +1,205 @@
+{
+    "object": "list",
+    "data": [
+        {
+            "id": "o3",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "o3-2025-04-16",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "o4-mini",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "o4-mini-2025-04-16",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "o3-mini",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "gpt-4o",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "gpt-4.1-2025-04-14",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "gpt-4.1",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "gpt-4.1-mini-2025-04-14",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "gpt-4.1-mini",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "gpt-4.1-nano-2025-04-14",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "gpt-4.1-nano",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "gpt-4o-2024-08-06",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "gpt-4o-2024-05-13",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "gpt-4o-mini",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "gpt-4o-mini-2024-07-18",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "gpt-4",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": true
+        },
+        {
+            "id": "gpt-3.5-turbo",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "openai",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "llama-3.3-70b",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "meta",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "llama-3-70b",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "meta",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "llama-3-8b",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "meta",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "gemini-1.5-pro",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "google",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "gemini-1.5-flash",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "google",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "gemini-1.5-flash-8b",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "google",
+            "type": "chat.completions",
+            "is_free": false
+        },
+        {
+            "id": "gemini-2.0-flash-exp",
+            "object": "model",
+            "created": 1686935002,
+            "owned_by": "google",
+            "type": "chat.completions",
+            "is_free": true
+        }
+    ]
+}
