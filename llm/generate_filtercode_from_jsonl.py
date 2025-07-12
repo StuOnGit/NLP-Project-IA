@@ -13,14 +13,14 @@ Sei un assistente esperto nella creazione di automazioni IFTTT tramite JavaScrip
 **Ogni risposta che darai deve seguire la seguente struttura**:
 * * Ogni variabile dell'output che ha la forma $$<variabile>$$ deve essere scritta come un commento con due slash (//) (es. //<variabile>).
 * * Rispondi con la $$Struttura di Output Secondario$$ #nel campo $$RICHIESTA$$ solo se ti serve qualcosa per completare la generazione del codice.
-* * Altrimenti la tua risposta default deve essere nella $$Struttura di Output Principale$$ che deve essere  il campo $$INTENT$$ che è una possibile personalizzazione della regola tramite un filtercode in linguaggio naturale e successivamente **solo il codice JavaScript** per il campo $$FILTERCODE$$.
+* * Altrimenti la tua risposta default deve essere nella $$Struttura di Output Principale$$ che deve essere il campo $$INTENT$$ che è variazione generalizzata della regola descritta nalla riga `original_description` e successivamente **solo il codice JavaScript** per il campo $$FILTERCODE$$.
 
 ### **Struttura del JSON di Input**
 
 #### **Campi principali:**
 * *`original_description`* (string): Descrizione in linguaggio naturale dell'automazione richiesta.
 * *`filter_code`* (string): Campo da riempire con il codice JavaScript generato. 
-
+* *`intent`* (string): Campo da riempire con una variazione generalizzata della regola descritta nalla riga `original_description` .
 
 #### **Sezione TRIGGER (evento scatenante):**
 * *`trigger_channel`* (string): Servizio che scatena l'automazione (es. "Weather Underground").
@@ -113,7 +113,6 @@ var message = "Alert: " + [Trigger].[ingredient]
 4. **Utilizza i Metodi Corretti** specificati in `action_developer_info`.
 5. **Scrivi Codice Robusto**, con gestione degli errori e messaggi informativi.
 6. **Commenta il Codice** quando la logica è complessa.
-7. **Chiedi Chiarimenti** se alcune informazioni sono mancanti.
 ### **Gestione di Servizi Sconosciuti**:
 * **Analizza la Struttura** dei `developer_info` per dedurre la sintassi.
 * **Usa il Pattern Generale** `[ServiceName].[actionSlug].[method]()`.
@@ -130,7 +129,7 @@ Genera **esclusivamente** il codice **JavaScript** per il campo `filter_code`, s
 
 #### $$Struttura di Output Principale$$:
 **INTENT**: // Inserisci qui una descrizione in linguaggio naturale della personalizzazione della regola tramite filtercode
-**FILTERCODE**: // Inserisci qui il codice JavaScript generato senza spiegazioni
+**FILTERCODE**: // Inserisci qui il codice JavaScript generato **senza spiegazioni**
 ---
 #### $$Struttura di Output Secondario$$:
 **RICHESTA**: // Inserisci qui cosa ti serve per completare la generazione del codice
@@ -149,15 +148,15 @@ if (Weather.tomorrowsForecastCallsFor.TomorrowsCondition === "Rain") {
 '''
 
 # Configura il client OpenAI (sostituisci con il modello open source che preferisci)
-client = OpenAI(api_key="g4a-91Q2z6EMzTgBcxJ3Gl9OIlJZfXyebNsyHUO", base_url="https://api.gpt4-all.xyz/v1")
+client = OpenAI(api_key="meta-llama-3-8b-instruct", base_url="http://127.0.0.1:1234/v1")
 MODEL_ID = "llama-3-8b"  # Sostituisci con il modello open source più adatto
 
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-input_path = f"{base_dir}/output/generated_prompt_data_step1234.jsonl"
-output_path = f"{base_dir}/data/generated_filtercode_output_40.jsonl"
+input_path = f"{base_dir}/output/generated_filtercode_input_test.jsonl"
+output_path = f"{base_dir}/data/generated_filtercode_output_test.jsonl"
 with open(input_path, "r", encoding="utf-8") as f_in, open(output_path, "w", encoding="utf-8") as f_out:
-    for line in itertools.islice(f_in, 43, 45): 
+    for line in itertools.islice(f_in, 0, 4): 
         json_obj = json.loads(line)
         user_prompt = json.dumps(json_obj, ensure_ascii=False)
         messages = [
@@ -193,7 +192,14 @@ with open(input_path, "r", encoding="utf-8") as f_in, open(output_path, "w", enc
         filter_code = filter_code.replace("**INTENT**", "").replace("**FILTERCODE**", "").strip()
 
         json_obj["intent"] = intent
-        json_obj["filter_code_generated"] = filter_code
+        # Gestione logica richiesta per filter_code con eccezione
+        if json_obj["filter_code"] == "":
+            print('filter_code vuoto')  # Se filter_code è vuoto o assente
+            json_obj["filter_code"] = filter_code
+        else:  # Se filter_code NON è vuoto
+            print('filter_code presente')  # Se filter_code è vuoto o assente
+            json_obj["filter_code_old"] = json_obj["filter_code"]
+            json_obj["filter_code"] = filter_code
 
         f_out.write(json.dumps(json_obj, ensure_ascii=False) + "\n")
         print(f"Prompt description: {json_obj.get('original_description', '')}\n\nOutput:\n{output}\n{'-'*60}")
