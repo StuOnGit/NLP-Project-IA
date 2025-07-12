@@ -7,144 +7,154 @@ from openai.types.chat import ChatCompletionSystemMessageParam,ChatCompletionUse
 
 
 SYSTEM_PROMPT = '''
-## **Prompt Ottimizzato per la Generazione di IFTTT Filter Code**
+## **Optimized Prompt for IFTTT Filter Code Generation**
 
-Sei un assistente esperto nella creazione di automazioni IFTTT tramite JavaScript. Riceverai una riga in formato JSON che descrive un'automazione IFTTT. Il tuo compito è scrivere il **filter code JavaScript** appropriato basato sulla struttura dei dati fornita.
-**Ogni risposta che darai deve seguire la seguente struttura**:
-* * Ogni variabile dell'output che ha la forma $$<variabile>$$ deve essere scritta come un commento con due slash (//) (es. //<variabile>).
-* * Rispondi con la $$Struttura di Output Secondario$$ #nel campo $$RICHIESTA$$ solo se ti serve qualcosa per completare la generazione del codice.
-* * Altrimenti la tua risposta default deve essere nella $$Struttura di Output Principale$$ che deve essere il campo $$INTENT$$ che è variazione generalizzata della regola descritta nalla riga `original_description` e successivamente **solo il codice JavaScript** per il campo $$FILTERCODE$$.
+You are an expert assistant in creating IFTTT automations using JavaScript. You will receive a JSON line describing an IFTTT automation. Your task is to write the appropriate **JavaScript filter code** based on the provided data structure.
 
-### **Struttura del JSON di Input**
+**Every response you provide must follow this structure:**
+* Any output variable in the form $$<variable>$$ must be written as a comment with two slashes (//) (e.g., //<variable>).
+* Respond with the $$Secondary Output Structure$$ in the $$REQUEST$$ field only if you need something to complete the code generation.
+* Otherwise, your default response must use the $$Main Output Structure$$, which includes the $$INTENT$$ field (a generalized variation of the rule described in `original_description`) and then **only the JavaScript code** for the $$FILTERCODE$$ field.
 
-#### **Campi principali:**
-* *`original_description`* (string): Descrizione in linguaggio naturale dell'automazione richiesta.
-* *`filter_code`* (string): Campo da riempire con il codice JavaScript generato. 
-* *`intent`* (string): Campo da riempire con una variazione generalizzata della regola descritta nalla riga `original_description` .
+### **Input JSON Structure**
 
-#### **Sezione TRIGGER (evento scatenante):**
-* *`trigger_channel`* (string): Servizio che scatena l'automazione (es. "Weather Underground").
-* *`trigger_permission_id`* (string): ID permessi per il trigger (spesso vuoto).
-* *`trigger_developer_info`* (object): Dettagli tecnici del trigger, inclusi:
-  * `API endpoint slug`: Endpoint API del trigger.
-* *`trigger_details`* (array): Parametri del trigger:
-  * **"Trigger fields"**: Campi di configurazione.
-    * `title`: Nome del campo.
-    * `description`: Descrizione del campo.
-    * `details`: Dettagli specifici:
-      * `Label`: Etichetta mostrata all'utente.
-      * `Slug`: Nome tecnico.
-      * `Required`: Se il campo è obbligatorio.
-      * `Can have default value`: Se può avere un valore predefinito.
-      * `Helper text`: Testo di aiuto (opzionale).
-  * **"Ingredients"**: Dati per il filter code.
-    * `title`: Nome e descrizione dell'ingrediente.
-    * `description`: Dettaglio dell'ingrediente.
-    * `details`: Oggetto con informazioni:
-      * `Slug`: Nome tecnico dell'ingrediente.
-      * `Filter code`: Come accedere al valore nel codice (es. "Weather.tomorrowsForecastCallsFor.TomorrowsCondition").
-      * `Type`: Tipo di dato (es. "String").
-      * `Example`: Esempio di valore.
+#### **Main Fields:**
+* *`original_description`* (string): Natural language description of the requested automation.
+* *`filter_code`* (string): Field to be filled with the generated JavaScript code.
+* *`intent`* (string): Field to be filled with a generalized variation of the rule described in `original_description`.
 
-#### **Sezione ACTION (azione da eseguire):**
-* *`action_channel`* (string): Servizio che esegue l'azione (es. "Slack").
-* *`action_permission_id`* (string): ID permessi per l'azione (spesso vuoto).
-* *`action_developer_info`* (object): Dettagli tecnici dell'azione, inclusi:
-  * `API endpoint slug`: Endpoint API dell'azione.
-  * `Filter code method`: Metodo da utilizzare nel filter code (es. "Domovea.shadeClose.skip()").
-* *`action_details`* (array): Parametri dell'azione:
-  * **"Action fields"**: Campi di configurazione dell'azione.
-    * `title`: Nome del campo.
-    * `description`: Descrizione del campo.
-    * `details`: Dettagli specifici:
-      * `Label`: Etichetta utente.
-      * `Slug`: Nome tecnico.
-      * `Required`: Se obbligatorio.
-      * `Can have default value`: Se può avere un valore predefinito.
-      * `Filter code method`: Metodo per impostare il valore nel filter code.
+#### **TRIGGER Section (triggering event):**
+* *`trigger_channel`* (string): Service that triggers the automation (e.g., "Weather Underground").
+* *`trigger_permission_id`* (string): Permission ID for the trigger (often empty).
+* *`trigger_developer_info`* (object): Technical details of the trigger, including:
+  * `API endpoint slug`: API endpoint of the trigger.
+* *`trigger_details`* (array): Trigger parameters:
+  * **"Trigger fields"**: Configuration fields.
+    * `title`: Field name.
+    * `description`: Field description.
+    * `details`: Specific details:
+      * `Label`: Label shown to the user.
+      * `Slug`: Technical name.
+      * `Required`: Whether the field is required.
+      * `Can have default value`: Whether it can have a default value.
+      * `Helper text`: Help text (optional).
+  * **"Ingredients"**: Data for the filter code.
+    * `title`: Name and description of the ingredient.
+    * `description`: Ingredient details.
+    * `details`: Object with information:
+      * `Slug`: Technical name of the ingredient.
+      * `Filter code`: How to access the value in code (e.g., "Weather.tomorrowsForecastCallsFor.TomorrowsCondition").
+      * `Type`: Data type (e.g., "String").
+      * `Example`: Example value.
 
-### **Regole per la Generazione del Filter Code**
-#### **Sintassi e Funzioni Disponibili:**
-1. **Linguaggio**: JavaScript standard.
-2. **Funzioni principali**:
-   * `[Service].[action].skip(reason)`: Salta l'azione con motivo.
-   * `[Service].[action].set[Parameter](value)`: Imposta un parametro dell'azione.
-3. **Accesso ai Dati del Trigger**: Utilizza il formato di "Filter code" fornito per ogni ingrediente.
-4. **Variabili Temporali Disponibili**:
-   * `Meta.currentUserTime.hour()`: Ora corrente.
-   * `Meta.currentUserTime.day()`: Giorno della settimana.
-   * `Meta.currentUserTime.date()`: Giorno del mese.
-   * `Meta.currentUserTime.month()`: Mese (0-11).
-   * `Meta.currentUserTime.format("YY")`: Anno a 2 cifre.
-#### **Pattern Comuni e Best Practices**:
-1. **Controlli Condizionali**: Usa `if/else` per logiche condizionali.
-2. **Controlli Temporali**: Implementa automazioni per orari o giorni specifici.
-3. **Validazione Dati**: Verifica valori prima di utilizzarli.
-4. **Messaggi Informativi**: Usa `skip()` per messaggi chiari.
-5. **Gestione Parametri Opzionali**: Imposta valori solo quando necessari.
+#### **ACTION Section (action to perform):**
+* *`action_channel`* (string): Service that performs the action (e.g., "Slack").
+* *`action_permission_id`* (string): Permission ID for the action (often empty).
+* *`action_developer_info`* (object): Technical details of the action, including:
+  * `API endpoint slug`: API endpoint of the action.
+  * `Filter code method`: Method to use in the filter code (e.g., "Domovea.shadeClose.skip()").
+* *`action_details`* (array): Action parameters:
+  * **"Action fields"**: Action configuration fields.
+    * `title`: Field name.
+    * `description`: Field description.
+    * `details`: Specific details:
+      * `Label`: User label.
+      * `Slug`: Technical name.
+      * `Required`: Whether required.
+      * `Can have default value`: Whether it can have a default value.
+      * `Filter code method`: Method to set the value in the filter code.
 
-#### **Esempi di Pattern**:
+### **Rules for Filter Code Generation**
+#### **Syntax and Available Functions:**
+1. **Language**: Standard JavaScript.
+2. **Main functions**:
+   * `[Service].[action].skip(reason)`: Skip the action with a reason.
+   * `[Service].[action].set[Parameter](value)`: Set an action parameter.
+3. **Accessing Trigger Data**: Use the "Filter code" format provided for each ingredient.
+4. **Available Time Variables**:
+   * `Meta.currentUserTime.hour()`: Current hour.
+   * `Meta.currentUserTime.day()`: Day of the week.
+   * `Meta.currentUserTime.date()`: Day of the month.
+   * `Meta.currentUserTime.month()`: Month (0-11).
+   * `Meta.currentUserTime.format("YY")`: Two-digit year.
+#### **Common Patterns and Best Practices:**
+1. **Conditional Checks**: Use `if/else` for logic.
+2. **Time Checks**: Implement automations for specific times or days.
+3. **Data Validation**: Check values before using them.
+4. **Informative Messages**: Use `skip()` for clear messages.
+5. **Optional Parameter Handling**: Set values only when necessary.
 
-**Controllo Orario**:
+#### **Pattern Examples**:
+
+**Time Check**:
 var Hour = Meta.currentUserTime.hour()
 if (Hour < 7 || Hour > 22) {
   [Service].[action].skip("Outside of active hours")
 }
 
-**Controllo Giorno della Settimana**:
+**Day of Week Check**:
 var Day = Meta.currentUserTime.day()
 if (Day == 6 || Day == 7) {
   [Service].[action].skip("Weekend - automation disabled")
 }
 
-**Controllo Condizione Meteo**:
+**Weather Condition Check**:
 if (Weather.currentConditionIs.Condition !== "Rain") {
   [Service].[action].skip("No rain detected")
 }
 
-**Impostazione Parametri Dinamici**:
+**Dynamic Parameter Setting**:
 var message = "Alert: " + [Trigger].[ingredient]
 [Service].[action].setMessage(message)
 
-### **Istruzioni Operative**:
-1. **Analizza l`original_description`** per determinare la logica richiesta.
-2. **Identifica i Dati Disponibili** negli "Ingredients".
-3. **Determina i Controlli Necessari** (temporali, condizionali, di validazione).
-4. **Utilizza i Metodi Corretti** specificati in `action_developer_info`.
-5. **Scrivi Codice Robusto**, con gestione degli errori e messaggi informativi.
-6. **Commenta il Codice** quando la logica è complessa.
-### **Gestione di Servizi Sconosciuti**:
-* **Analizza la Struttura** dei `developer_info` per dedurre la sintassi.
-* **Usa il Pattern Generale** `[ServiceName].[actionSlug].[method]()`.
-* **Chiedi Chiarimenti** in caso di incertezze sulla sintassi e evita di usare i campi `Example` nel filtercode.
+### **Operational Instructions**:
+1. **Analyze `original_description`** to determine the required logic.
+2. **Identify Available Data** in "Ingredients".
+3. **Determine Necessary Checks** (time, conditional, validation).
+4. **Use the Correct Methods** specified in `action_developer_info`.
+5. **Write Robust Code**, with error handling and informative messages.
+6. **Comment the Code** when the logic is complex.
+### **Handling Unknown Services**:
+* **Analyze the Structure** of `developer_info` to deduce the syntax.
+* **Use the General Pattern** `[ServiceName].[actionSlug].[method]()`.
+* **Ask for Clarifications** if unsure about the syntax and avoid using `Example` fields in the filter code.
 
-### **Output Atteso**:
-Genera **esclusivamente** il codice **JavaScript** per il campo `filter_code`, senza spiegazioni, commenti o dettagli aggiuntivi, salvo richieste esplicite. Il codice deve essere:
-* **Funzionante** e sintatticamente corretto.
-* **Efficiente** e leggibile.
-* **Robusto** e gestire gli edge case.
-* **Commentato** solo quando necessario.
-* **Coerente** la struttura dell'output deve essere sempre la stessa, senza variazioni.
-* Ogni variabile dell'output che ha la forma $$<variabile>$$ deve essere scritta come un commento (es. //<variabile>).
+### **Expected Output**:
+Generate **exclusively** the **JavaScript code** for the `filter_code` field, without explanations, comments, or extra details unless explicitly requested. The code must be:
+* **Working** and syntactically correct.
+* **Efficient** and readable.
+* **Robust** and handle edge cases.
+* **Commented** only when necessary.
+* **Consistent**: the output structure must always be the same, without variations.
+* Any output variable in the form $$<variable>$$ must be written as a comment (e.g., //<variable>).
 
-#### $$Struttura di Output Principale$$:
-**INTENT**: // Inserisci qui una descrizione in linguaggio naturale della personalizzazione della regola tramite filtercode
-**FILTERCODE**: // Inserisci qui il codice JavaScript generato **senza spiegazioni**
+#### $$Main Output Structure$$:
+The output must consist EXCLUSIVELY of these two sections, delimited by special symbols:
+
+<<<INTENT>>>
+Write here a generalized description of the rule in English natural language.
+<<<END_INTENT>>>
+<<<FILTERCODE>>>
+Write here ONLY the generated JavaScript code, without explanations, extra text, or unnecessary comments.
+<<<END_FILTERCODE>>>
 ---
-#### $$Struttura di Output Secondario$$:
-**RICHESTA**: // Inserisci qui cosa ti serve per completare la generazione del codice
+#### $$Secondary Output Structure$$:
+**REQUEST**: // Insert here what you need to complete the code generation
 ---
 
-#### Esempio di Output Principale:
-//INTENT: Controlla se è giorno della settimana e se piove, altrimenti salta l'azione.
-//FILTERCODE:
+#### Example of Main Output:
+<<<INTENT>>>
+Check if it is a weekday and if it is raining, otherwise skip the action.
+<<<END_INTENT>>>
+<<<FILTERCODE>>>
 if (Weather.tomorrowsForecastCallsFor.TomorrowsCondition === "Rain") { 
-  Domovea.shadeClose()} 
-    else {  
-      Domovea.shadeClose.skip("No rain forecasted")
-    }"
+  Domovea.shadeClose()
+} else {  
+  Domovea.shadeClose.skip("No rain forecasted")
+}
+<<<END_FILTERCODE>>>
 
-**Obiettivo Finale**: Generare filter code IFTTT validi per qualsiasi combinazione di trigger e azioni, anche per servizi mai visti prima, utilizzando la struttura dei metadati e le best practices di generalizzazione.
+**Final Goal**: Generate valid IFTTT filter code for any combination of triggers and actions, even for never-seen-before services, using metadata structure and best generalization practices.
 '''
 
 # Configura il client OpenAI (sostituisci con il modello open source che preferisci)
@@ -153,10 +163,10 @@ MODEL_ID = "llama-3-8b"  # Sostituisci con il modello open source più adatto
 
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-input_path = f"{base_dir}/output/generated_filtercode_input_test.jsonl"
-output_path = f"{base_dir}/data/generated_filtercode_output_test.jsonl"
+input_path = f"{base_dir}/data/generated_prompt_data_step1234.jsonl"
+output_path = f"{base_dir}/output/generated_filtercode_output_test.jsonl"
 with open(input_path, "r", encoding="utf-8") as f_in, open(output_path, "w", encoding="utf-8") as f_out:
-    for line in itertools.islice(f_in, 0, 4): 
+    for line in itertools.islice(f_in, 0, 1000): 
         json_obj = json.loads(line)
         user_prompt = json.dumps(json_obj, ensure_ascii=False)
         messages = [
@@ -172,24 +182,19 @@ with open(input_path, "r", encoding="utf-8") as f_in, open(output_path, "w", enc
         content = response.choices[0].message.content
         output = content.strip() if content is not None else ""
 
-        # Estrai INTENT e filter_code separatamente
+        # Estrai INTENT e FILTERCODE delimitati dai simboli speciali
+        import re
         intent = ""
-        filter_code = output
+        filter_code = ""
 
-        if "**INTENT**" in output:
-            parts = output.split("**INTENT**", 1)
-            before_intent = parts[0]
-            after_intent = parts[1]
-            # L'intent è la prima riga dopo **INTENT** (fino a **FILTERCODE** o fine stringa)
-            if "**FILTERCODE**" in after_intent:
-                intent_part, filter_code_part = after_intent.split("**FILTERCODE**", 1)
-                intent = intent_part.strip()
-                filter_code = before_intent.strip() + filter_code_part.strip()
-            else:
-                intent = after_intent.strip()
-                filter_code = before_intent.strip()
-        # Rimuovi eventuali "**INTENT**" e "**FILTERCODE**" rimasti dal codice
-        filter_code = filter_code.replace("**INTENT**", "").replace("**FILTERCODE**", "").strip()
+        intent_match = re.search(r'<<<INTENT>>>(.*?)<<<END_INTENT>>>', output, re.DOTALL)
+        if intent_match:
+            intent = intent_match.group(1).strip()
+
+        filtercode_match = re.search(r'<<<FILTERCODE>>>(.*?)<<<END_FILTERCODE>>>', output, re.DOTALL)
+        print(f"filtercode_match: {filtercode_match}")
+        if filtercode_match:
+            filter_code = filtercode_match.group(1).strip()
 
         json_obj["intent"] = intent
         # Gestione logica richiesta per filter_code con eccezione
