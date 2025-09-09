@@ -164,7 +164,7 @@ MODEL_ID = "llama-3-8b"  # Sostituisci con il modello open source più adatto
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 input_path = f"{base_dir}/data/generated_prompt_data_step1234.jsonl"
-output_path = f"{base_dir}/output/generated_filtercode_output_test2.jsonl"
+output_path = f"{base_dir}/output/generated_filtercode_output_test.jsonl"
 with open(input_path, "r", encoding="utf-8") as f_in, open(output_path, "w", encoding="utf-8") as f_out:
     for line in itertools.islice(f_in, 49, 1000): 
         json_obj = json.loads(line)

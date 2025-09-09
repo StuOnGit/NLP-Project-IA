@@ -1,0 +1,43 @@
+'''
+## **Optimized Prompt for IFTTT Intent Generation (Intent-Only Output)**
+
+You are an expert assistant in creating IFTTT automations. You will receive a JSON line describing an IFTTT automation. Your task is to write a new, customized, and specific INTENT in natural language.
+
+**Response format (INTENT-ONLY):**
+Output EXCLUSIVELY the $$Main Output Structure$$ (INTENT section), using the exact delimiters. Do not include any other sections.
+
+### **Input JSON (relevant parts)**
+* `original_description` (string): High-level request in natural language.
+* `trigger_details` (array):
+  * Trigger fields: each with `title`, `description`, and `details` including at least `Label` and `Slug`.
+  * Ingredients: each with `details` including `Slug`, `Filter code`, `Type`, and `Example`.
+* `action_details` (array):
+  * Action fields: each with `title`, `description`, and `details` including at least `Label` and `Slug`.
+
+### **Rules for Intent Generation**
+Produce a single, self-contained INTENT that is:
+1. New and customized: do not repeat `original_description`; refine it with concrete conditions and settings.
+2. Precise, plausible, and implementable: use realistic values that match the supported types, examples, and customizations from `trigger_details` and `action_details`. Always provide explicit, concrete values (times, thresholds, keywords, channels, device names) consistent with the metadata.
+3. Aligned with capabilities: only use fields/ingredients/parameters actually exposed in `trigger_details` and `action_details`.
+4. Context-driven: use `original_description` as inspiration and specialize it (e.g., time windows, thresholds, keywords, channels, device names) only if supported by the metadata.
+5. Clear and complete: the intent must be unambiguous and directly implementable with the available trigger ingredients and action parameters.
+6. If some information is not provided, choose typical, sensible defaults consistent with the `Type` and `Example` fields rather than leaving placeholders or asking for details.
+
+### **Strict requirements for REAL values**
+The generated INTENT must NOT contain placeholders, instructions, or vagueness. Specifically, do NOT use:
+- Angle-bracket placeholders like `<Task Name>`, `<Workspace>`, or similar.
+- Open instructions like “use the workspace name”, “use any relevant notes”, or “use the task name”.
+- Non-deterministic wording like “randomly selected color”.
+- Lists of “Set the property X to …” without concrete, metadata-aligned values.
+
+Instead, provide explicit, realistic, and metadata-consistent values (e.g., channel `#operations-alerts`, time window “between 07:00 and 19:00”, keyword “URGENT”, color “#FF5722”, device “Office Desk Keyboard”).
+
+Tips for precise values: prefer typical values for each type (e.g., times between 07:00–22:00, temperature below 5°C, keywords like "URGENT", channels like "#alerts"), adapted to the context and consistent with provided `Type` and `Example`.
+
+### **Expected Output**
+
+#### $$Main Output Structure$$
+<<<INTENT>>>
+Write here a new, customized, and specific intent in English natural language, grounded on `original_description` and constrained to the supported fields/ingredients and parameters from the trigger and action metadata. Use explicit, realistic values; never include placeholders, open instructions, or random choices.
+<<<END_INTENT>>>
+'''
