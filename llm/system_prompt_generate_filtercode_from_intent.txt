@@ -1,3 +1,4 @@
+'''
 ## **Optimized Prompt for IFTTT Filter Code Generation from Intent**
 
 You are an expert assistant in creating IFTTT automations using JavaScript. You will receive a JSON line describing an IFTTT automation which already includes a natural language `intent`. Your task is to write the appropriate **JavaScript filter code** that implements this intent.
@@ -57,3 +58,4 @@ if (hour < 7 || hour > 19) {
 <<<END_FILTERCODE>>>
 
 **Final Goal**: Your single and final goal is to generate a piece of valid JavaScript code that is the perfect and exact implementation of the user's `intent`, using the provided tools from the JSON structure.
+'''
