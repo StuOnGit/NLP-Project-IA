@@ -1,7 +1,25 @@
 import json
 import os
 
-filepath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+filepath = os.path.dirname(os.path.abspath(__file__))
+
+def remove_filter_code_old(file_path):
+    """
+    Rimuove la chiave 'filter_code_old' da ogni riga del file jsonl, se presente, e salva il risultato in un nuovo file.
+    """
+    out_path = file_path.replace('.jsonl', '_nofiltercodeold.jsonl')
+    count = 0
+    with open(file_path, 'r', encoding='utf-8') as fin, open(out_path, 'w', encoding='utf-8') as fout:
+        for line in fin:
+            if not line.strip():
+                continue
+            obj = json.loads(line)
+            if 'filter_code_old' in obj:
+                del obj['filter_code_old']
+                count += 1
+            fout.write(json.dumps(obj, ensure_ascii=False) + '\n')
+    print(f"Fatto. Rimosse 'filter_code_old' da {count} righe. File salvato come: {out_path}")
+
 
 def load_jsonl(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -36,7 +54,7 @@ def check_duplicates_in_file_exclude_last_key():
     output_dir = filepath
     jsonl_files = [f for f in os.listdir(output_dir) if f.endswith('.jsonl')]
     if not jsonl_files:
-        print("Nessun file .jsonl trovato nella cartella output.")
+        print("Nessun file .jsonl trovato nella cartella di lavoro.")
         return
     print("Scegli il file su cui cercare duplicati (escludendo le ultime 3 chiavi):")
     for i, fname in enumerate(jsonl_files, 1):
@@ -97,18 +115,13 @@ def main():
     print("1 - Confronta due file jsonl escludendo le ultime 3 chiavi")
     print("2 - Cerca duplicati interni in un file escludendo le ultime 3 chiavi")
     print("3 - Trova le righe di un file che non sono nell'altro (confronto completo)")
-    scelta = input("Inserisci 1, 2 o 3: ").strip()
-    print("Scegli modalità:")
-    print("1 - Confronta due file jsonl escludendo le ultime 3 chiavi")
-    print("2 - Cerca duplicati interni in un file escludendo le ultime 3 chiavi")
-    print("3 - Trova le righe di un file che non sono nell'altro (confronto completo)")
     print("4 - Rimuovi la chiave 'filter_code_old' da ogni riga di un file jsonl")
     scelta = input("Inserisci 1, 2, 3 o 4: ").strip()
     if scelta == "1":
         output_dir = filepath
         jsonl_files = [f for f in os.listdir(output_dir) if f.endswith('.jsonl')]
         if len(jsonl_files) < 2:
-            print("Servono almeno due file .jsonl nella cartella output.")
+            print("Servono almeno due file .jsonl nella cartella di lavoro.")
             return
         print("Scegli il primo file da confrontare:")
         for i, fname in enumerate(jsonl_files, 1):
@@ -135,7 +148,7 @@ def main():
         output_dir = filepath
         jsonl_files = [f for f in os.listdir(output_dir) if f.endswith('.jsonl')]
         if len(jsonl_files) < 2:
-            print("Servono almeno due file .jsonl nella cartella output.")
+            print("Servono almeno due file .jsonl nella cartella di lavoro.")
             return
         print("Scegli il primo file da confrontare:")
         for i, fname in enumerate(jsonl_files, 1):
@@ -160,7 +173,7 @@ def main():
         output_dir = filepath
         jsonl_files = [f for f in os.listdir(output_dir) if f.endswith('.jsonl')]
         if not jsonl_files:
-            print("Nessun file .jsonl trovato nella cartella output.")
+            print("Nessun file .jsonl trovato nella cartella di lavoro.")
             return
         print("Scegli il file da processare per rimuovere la chiave 'filter_code_old':")
         for i, fname in enumerate(jsonl_files, 1):
@@ -177,22 +190,11 @@ def main():
     else:
         print("Scelta non valida.")
 
+def find_rows_not_in_other(file1, file2):
+    """
+    Trova e stampa le righe (oggetti) che sono in file1 ma non in file2 e viceversa.
+    """
     data1 = load_jsonl(file1)
-    """
-    Rimuove la chiave 'filter_code_old' da ogni riga del file jsonl, se presente, e salva il risultato in un nuovo file.
-    """
-    out_path = file_path.replace('.jsonl', '_nofiltercodeold.jsonl')
-    count = 0
-    with open(file_path, 'r', encoding='utf-8') as fin, open(out_path, 'w', encoding='utf-8') as fout:
-        for line in fin:
-            if not line.strip():
-                continue
-            obj = json.loads(line)
-            if 'filter_code_old' in obj:
-                del obj['filter_code_old']
-                count += 1
-            fout.write(json.dumps(obj, ensure_ascii=False) + '\n')
-    print(f"Fatto. Rimosse 'filter_code_old' da {count} righe. File salvato come: {out_path}")
     data2 = load_jsonl(file2)
     def strip_last3(obj):
         keys = list(obj.keys())
