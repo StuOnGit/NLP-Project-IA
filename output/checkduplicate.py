@@ -3,9 +3,9 @@ import os
 
 filepath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-file1 = f"{filepath}/output/fullraw_dup.jsonl"
-file2 = f"{filepath}/output/generated_prompt_data_step1234.jsonl"
-output_file = f"{filepath}/output/generated_prompt_data_step1234_fin.jsonl"
+file1 = f"{filepath}fullraw_dup.jsonl"
+file2 = f"{filepath}generated_prompt_data_step1234.jsonl"
+output_file = f"{filepath}generated_prompt_data_step1234_fin.jsonl"
 
 def load_jsonl(filepath):
     with open(filepath, 'r', encoding='utf-8') as f:

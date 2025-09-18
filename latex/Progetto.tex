@@ -1,0 +1,141 @@
+\documentclass[sigconf,natbib=false]{acmart}
+
+%%
+%% Bibliography settings
+\usepackage[style=ACM-Reference-Format,backend=bibtex,sorting=none]{biblatex}
+\addbibresource{references.bib}
+\newcommand{\quotes}[1]{``#1''}
+
+\usepackage{subfigure}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize\ttfamily, % Changed to ttfamily for code
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+
+\title{\textbf{Generazione Automatica di Filter Code per IFTTT\tramite Large Language Models}}
+\author{Corso di Intelligenza Artificiale\Progetto su Natural Language Processing\Prof. Vincenzo Deufemia\ \vspace{0.2cm} Studenti: Mario Balbi, Francesco De Stasio, Antonio Imperiale}
+\date{\today}
+
+\begin{document}
+\begin{abstract}
+Questo progetto \cite{schulman2017ppo} esplora l'applicazione dei Large Language Models (LLM) per automatizzare la generazione di codice JavaScript, noto come "filter code", per la piattaforma di automazione IFTTT (If This Then That). La scrittura manuale di questo codice, basato su una sintassi specifica di JavaScript arricchita da oggetti e metodi propri della piattaforma (es. `Weather.currentCondition.Condition`, `Slack.postToChannel.skip()`), rappresenta una barriera significativa per gli utenti non tecnici. Per affrontare questa sfida, è stato sviluppato un sistema software completo che orchestra un processo a più fasi. Inizialmente, un crawler basato su Selenium raccoglie in modo sistematico dati dettagliati sui servizi, trigger e azioni disponibili su IFTTT. Successivamente, questi dati vengono utilizzati per costruire un dataset strutturato, dove ogni elemento associa una descrizione in linguaggio naturale di un'automazione ai metadati tecnici necessari. Infine, il sistema impiega una strategia di prompting a due fasi con un LLM: la prima fase genera un "intent" chiaro e specifico a partire dalla descrizione generica dell'utente; la seconda fase utilizza questo intent per generare il codice JavaScript finale. Questo approccio mira a rendere la creazione di automazioni complesse più accessibile, traducendo le intenzioni umane in codice eseguibile.
+\end{abstract}
+
+\maketitle
+\pagestyle{plain}
+
+\section{Introduzione}
+IFTTT (If This Then That) è una popolare piattaforma web che consente agli utenti di creare catene di semplici istruzioni condizionali, chiamate "applet". Un'applet connette due o più servizi per eseguire un'azione automatica in risposta a un trigger. Ad esempio, "Se ricevo un'email con un allegato, allora salva l'allegato su Dropbox". Questa semplice astrazione "If-This-Then-That" ha permesso un'ampia adozione della piattaforma per l'automazione di attività quotidiane.
+
+Per automazioni più sofisticate, IFTTT offre una funzionalità avanzata chiamata "filter code", che permette agli utenti di scrivere logica personalizzata in JavaScript per controllare o modificare il comportamento di un'applet. Questa funzionalità espone un ambiente di esecuzione in cui i dati provenienti dal trigger (chiamati "ingredients") sono disponibili come variabili e le azioni possono essere manipolate tramite metodi specifici (es. `skip()` per annullare l'azione). Tuttavia, questa potente funzionalità richiede competenze di programmazione JavaScript e una comprensione dell'API di IFTTT, limitandone di fatto l'adozione da parte di un'ampia base di utenti non tecnici.
+
+L'avvento dei Large Language Models (LLM) ha aperto nuove frontiere nella generazione di codice da linguaggio naturale. Questo progetto sfrutta questa capacità per abbattere la barriera tecnica della scrittura di filter code. L'obiettivo è creare un sistema end-to-end in grado di comprendere la descrizione di un'automazione fornita da un utente in linguaggio naturale e tradurla automaticamente in codice JavaScript valido e funzionante, specifico per l'ambiente di esecuzione di IFTTT.
+
+\section{Obiettivi del Progetto}
+Gli obiettivi principali di questo studio sono stati definiti per affrontare sistematicamente il problema, dalla raccolta dei dati alla generazione del codice:
+\begin{itemize}
+  \item Sviluppare un sistema di web crawling robusto, basato su Selenium, per estrarre in modo completo e strutturato i metadati dei servizi, trigger e azioni dalla piattaforma IFTTT, inclusi dettagli tecnici come "slug", "ingredients" e metodi specifici del filter code.
+  \item Costruire un dataset di alta qualità in formato JSON Lines, dove ogni record associ una descrizione in linguaggio naturale di un'automazione a tutti i dettagli tecnici necessari per la generazione del codice, ottenuti tramite la fase di crawling.
+  \item Progettare e implementare una pipeline basata su LLM per la generazione di codice, introducendo una strategia a due fasi (generazione di "intent" e successiva generazione di codice) per migliorare la precisione, la specificità e l'affidabilità del risultato finale.
+  \item Dimostrare la fattibilità e l'efficacia dell'approccio attraverso un'analisi qualitativa dettagliata degli output generati dal sistema, verificando la coerenza tra l'intento dell'utente, l'intent intermedio e il filter code finale.
+\end{itemize}
+
+\section{Architettura del Sistema}
+Il sistema è stato progettato con un'architettura modulare che riflette le tre fasi principali del progetto: raccolta dati, generazione del dataset e generazione del codice tramite LLM. Queste fasi sono implementate negli script contenuti rispettivamente nelle directory \url{crawler/}, \url{generate/} e \url{llm/}.
+
+\subsection{Fase 1: Data Collection}
+La prima fase, cruciale per fornire al LLM il contesto necessario, consiste nel raccogliere informazioni dettagliate da IFTTT. Questo compito è affidato a una serie di script nella directory \url{crawler/}, che automatizzano l'interazione con il sito web.
+\begin{itemize}
+    \item \textbf{Scraping dei Servizi:} Utilizzando le librerie \texttt{Selenium} e \texttt{webdriver-manager}, lo script \url{crawler.py} simula la navigazione di un utente sulla pagina "explore" di IFTTT per estrarre dinamicamente un elenco completo di tutti i servizi disponibili e i loro URL univoci.
+    \item \textbf{Estrazione dei Dettagli:} Per ogni servizio, il sistema visita il suo URL e, tramite funzioni come \url{get_triggers_actions_queries}, identifica programmaticamente i link a tutti i trigger, azioni e query associati. Successivamente, la funzione \url{extract_detail_data} analizza ciascuno di questi link per estrarre metadati cruciali che saranno fondamentali per il LLM:
+    \begin{itemize}
+        \item \textbf{Developer Info:} Informazioni tecniche come l'API endpoint slug, essenziale per identificare univocamente il componente.
+        \item \textbf{Trigger/Action Fields:} I campi di configurazione che un utente può impostare, con le loro etichette e opzioni.
+        \item \textbf{Ingredients:} Le variabili (dati) che il trigger fornisce e che possono essere utilizzate nel filter code. Per ogni ingrediente, vengono raccolti il nome, la descrizione e, soprattutto, la sintassi per accedervi nel codice (es. \url{Weather.currentConditionIs.Condition}).
+    \end{itemize}
+    \item \textbf{Esecuzione Parallela:} Poiché il processo di scraping è I/O-bound e richiede attese significative per il caricamento delle pagine, lo script \url{crawler_saver.py} impiega un \texttt{ThreadPoolExecutor} per parallelizzare il processo di scraping su più servizi contemporaneamente. Questo ottimizza drasticamente i tempi di raccolta, salvando infine tutti i dati aggregati in un unico file JSON strutturato (\url{ifttt_services_parallel.json}).
+\end{itemize}
+Questo approccio garantisce una base di conoscenza completa, strutturata e aggiornata su cui fondare le fasi successive del progetto.
+
+\subsection{Fase 2: Generazione del Dataset}
+Gli script nella directory \url{generate/} sono responsabili della trasformazione dei dati grezzi in un dataset raffinato, pronto per essere utilizzato dal LLM. La base di partenza è un sottoinsieme del dataset pubblico "IFTTT Recipes"\footnote{Il dataset completo è disponibile su Kaggle: \url{https://www.kaggle.com/datasets/hrs2kr/ifttt-recipes}}. Questo dataset, contenente oltre 50.000 "ricette" (applet), fu originariamente creato per studi sull'interazione uomo-macchina nel contesto IoT. Per questo progetto, è stato selezionato il file `Step1_Raw_Data_with_FilterCode1.csv`, poiché include non solo le descrizioni delle automazioni ma anche esempi di `filter_code` reali, essenziali per il nostro scopo.
+
+Il processo di arricchimento è fondamentale: per ogni riga del file CSV di partenza, il sistema identifica il trigger e l'azione corrispondenti e li associa ai metadati dettagliati ottenuti nella fase di crawling. Questo produce un file JSON Lines (\url{.jsonl}), un formato ideale per l'elaborazione in streaming da parte dei modelli linguistici. Ogni riga del file finale rappresenta un'automazione completa e autoconsistente, contenente tutte le informazioni necessarie per il task generativo: la descrizione originale, i dettagli completi del trigger (canale, slug, campi, ingredienti con la loro sintassi) e i dettagli dell'azione.
+
+\subsection{Fase 3: Generazione del Codice con LLM}
+Questa è la fase centrale del progetto, implementata nella directory \url{llm/}, dove l'intelligenza artificiale viene sfruttata per la generazione di codice. Viene utilizzata una strategia a due passaggi (two-step prompting) per massimizzare la qualità del codice generato, scomponendo un problema complesso in due task più semplici.
+
+\begin{enumerate}
+    \item \textbf{Generazione dell'Intent:} Il primo passaggio affronta l'intrinseca ambiguità e genericità delle descrizioni in linguaggio naturale. Lo script \url{generate_intent_from_jsonl.py} invia a un LLM (es. \url{llama-3.3-70b}) una riga del dataset JSONL. Il prompt di sistema, definito in \url{system_prompt_generate_intent.txt}, istruisce il modello a non generare codice, ma a trasformare la \url{original_description} in un \textbf{intent} preciso, specifico e implementabile. Il modello deve utilizzare i metadati disponibili (nomi dei campi, tipi di dati, valori di esempio) per suggerire valori concreti, risolvendo le ambiguità (es. trasformando "se fa freddo" in "se la temperatura scende sotto i 5 gradi Celsius").
+    
+    \item \textbf{Generazione del Filter Code:} Una volta ottenuto un intent chiaro e non ambiguo, lo script \url{generate_filtercode_from_intent.py} esegue il secondo e ultimo passaggio. Invia all'LLM la stessa struttura dati, arricchita con l'intent generato. Questa volta, il prompt di sistema (\url{system_prompt_generate_filtercode_from_intent.txt}) è radicalmente diverso: istruisce il modello a ignorare completamente la descrizione originale e a basarsi \textbf{esclusivamente sull'intent} per produrre il codice JavaScript. Il modello deve usare gli "ingredients" del trigger e i metodi dell'azione (es. `skip()`) per tradurre fedelmente la logica dell'intent in codice eseguibile.
+\end{enumerate}
+
+Questa separazione dei compiti—prima chiarire l'intenzione, poi scrivere il codice—si è rivelata fondamentale. Isola il ragionamento semantico dalla generazione sintattica, consentendo a ciascuna fase di concentrarsi su un obiettivo più ristretto e ottenendo risultati complessivamente più robusti e pertinenti.
+
+\section{Analisi Qualitativa dei Risultati}
+Data la natura generativa del progetto, la valutazione è stata condotta qualitativamente, analizzando la coerenza, la correttezza e la plausibilità del codice prodotto. Consideriamo un esempio concreto emerso durante lo sviluppo:
+
+\noindent\textbf{Input (Original Description):} \textit{"If tomorrow's forecast calls for rain, then close the shades."}
+
+\noindent\textbf{Fase 1 (Generazione Intent):} L'LLM, analizzando i metadati del trigger `Weather` e dell'azione `Domovea`, e vedendo che la condizione può essere solo una stringa specifica, genera un intent privo di ambiguità:
+\begin{lstlisting}[language=text]
+<<<INTENT>>>>>
+Check if tomorrow's forecast condition is exactly "Rain". If it is, proceed to close the shades. Otherwise, skip the shade closing action with the message "No rain forecasted for tomorrow".
+<<<END_INTENT>>>>
+\end{lstlisting}
+
+\noindent\textbf{Fase 2 (Generazione Filter Code):} Basandosi su questo intent e sui metadati che specificano \url{Weather.tomorrowsForecastCallsFor.TomorrowsCondition} come "ingrediente" e \url{Domovea.shadeClose.skip()} come metodo per saltare l'azione, l'LLM genera il codice finale, aderendo perfettamente alla logica richiesta:
+\begin{lstlisting}[language=javascript]
+<<<FILTERCODE>>>>
+if (Weather.tomorrowsForecastCallsFor.TomorrowsCondition === "Rain") { 
+  // The condition is met, so the action will run by default.
+  // No specific code is needed here.
+} else {  
+  Domovea.shadeClose.skip("No rain forecasted for tomorrow");
+}
+<<<END_FILTERCODE>>>>
+\end{lstlisting}
+Questo esempio dimostra come il sistema riesca a tradurre una richiesta generica in un intent specifico e, successivamente, in un codice JavaScript sintatticamente corretto e logicamente coerente con l'intent, utilizzando correttamente le API fornite dalla piattaforma IFTTT.
+
+\section{Conclusioni e Sviluppi Futuri}
+Questo progetto ha dimostrato con successo la fattibilità di un sistema automatico per la generazione di filter code IFTTT tramite Large Language Models. L'architettura a più fasi, che comprende un crawler dedicato per la raccolta di metadati specifici, una pipeline di generazione di dataset e una strategia di prompting a due passaggi, si è rivelata una soluzione efficace per gestire la complessità del problema, dalla comprensione del linguaggio naturale alla generazione di codice specifico per un dominio.
+
+Il sistema rappresenta un passo avanti significativo nel rendere le automazioni avanzate più accessibili agli utenti non programmatori, democratizzando di fatto una funzionalità potente ma storicamente di nicchia.
+
+Per gli sviluppi futuri, si potrebbero esplorare diverse direzioni promettenti:
+\begin{itemize}
+    \item \textbf{Valutazione Quantitativa:} Sviluppare un framework di valutazione automatica. Questo potrebbe includere l'uso di linter (come ESLint) per la correttezza sintattica e la creazione di un testbed per eseguire il codice generato con dati di trigger mock e asserire il comportamento atteso (es. verificare se `skip()` viene chiamato nelle condizioni corrette).
+    \item \textbf{Fine-tuning del Modello:} Eseguire il fine-tuning di un LLM open-source (come Llama-3 o Mistral) sul dataset generato. Questo potrebbe portare a un modello più piccolo, veloce e specializzato, con performance superiori nel dominio specifico del filter code IFTTT rispetto a modelli generalisti.
+    \item \textbf{Interfaccia Utente Interattiva:} Creare un'interfaccia web o un'estensione del browser che integri il sistema. Gli utenti potrebbero descrivere la loro automazione in una casella di testo e ricevere il codice generato da copiare e incollare, magari con la possibilità di fornire feedback per un ciclo di miglioramento continuo (RLHF).
+    \item \textbf{Gestione di Logiche Complesse:} Estendere il sistema per supportare la generazione di codice che gestisce automazioni multi-azione o condizioni logiche complesse (es. "se piove E sono le 8 del mattino..."), che richiederebbero una strutturazione più avanzata dell'intent e del codice generato.
+\end{itemize}
+
+\printbibliography % Se si usa un file .bib
+
+\end{document}
