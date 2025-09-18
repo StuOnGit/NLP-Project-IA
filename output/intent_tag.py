@@ -2,8 +2,8 @@ import json
 import os
 
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-file1 = os.path.join(base_dir, "output", "generated_intent_output_1-547.jsonl")
-file2 = os.path.join(base_dir, "output", "finali", "generated_intent_1-547_300_validate_llama3.jsonl")
+file1 = os.path.join(base_dir, "output", "generated_intent_output_1-563.jsonl")
+file2 = os.path.join(base_dir, "output", "generated_intent_1-563_300_validate_llama3_nodup.jsonl")
 # output_file = os.path.join(base_dir, "output", "finali", "intent_tagged_1-547.json")
 output_jsonl = os.path.join(base_dir, "output", "finali", "intent_tagged_1-547.jsonl")
 output_nonvalid = os.path.join(base_dir, "output", "finali", "intent_nonvalid_in_file2.jsonl")
@@ -50,10 +50,12 @@ with open(output_jsonl, "w", encoding="utf-8") as fout:
     for obj in result:
         fout.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
-# Scrivi il file delle righe non valide di file1 contenute in file2
-with open(output_nonvalid, "w", encoding="utf-8") as fout:
-    for obj in nonvalid_in_file2:
-        fout.write(json.dumps(obj, ensure_ascii=False) + "\n")
+
+# Scrivi il file delle righe non valide di file1 contenute in file2 solo se presenti
+if nonvalid_in_file2:
+    with open(output_nonvalid, "w", encoding="utf-8") as fout:
+        for obj in nonvalid_in_file2:
+            fout.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
 valid_count = sum(1 for r in result if r["valid"])
 not_valid_count = len(result) - valid_count
